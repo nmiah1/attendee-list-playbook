@@ -1,0 +1,38 @@
+---
+- name: "Return content from list attendees page"
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars_prompt:
+    - name: weburl
+      prompt: What is the workshop URL? An example would be http://login.a76d.open.redhat.com/list.php
+      private: no
+
+    - name: password
+      prompt: What is the workhop student password?
+  
+  tasks:
+
+  - name: "Using URI module to pull down the content on the PHP page"
+    uri:
+      url: "{{ weburl }}"
+      method: POST
+      body_format: form-urlencoded
+      body:
+        pass: "{{ password }}"
+        enter: Submit
+      return_content: yes
+    register: login
+
+  - set_fact:
+      myvar: "{{ login.content | to_nice_yaml }}"
+
+  - set_fact:
+      lines: "{{ myvar.split('<tr>')[1:-1] }}"
+      output: ""
+
+  - lineinfile:
+      path:  attendee-list-{{ ansible_date_time.date }}.csv
+      create: true
+      line: "{{ item.split('<td>')[1][:-5], item.split('<td>')[2][:-5] }}"
+    with_items: "{{ lines }}"
