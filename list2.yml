@@ -36,3 +36,9 @@
       create: true
       line: "{{ item.split('<td>')[1][:-5], item.split('<td>')[2][:-5] }}"
     with_items: "{{ lines }}"
+    
+  - replace: 
+      path: ansible-attendee-list-{{ ansible_date_time.date }}.csv
+      regexp: '[^A-Za-z@. \n,]'
+      replace:  ""
+  
